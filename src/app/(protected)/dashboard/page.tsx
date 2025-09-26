@@ -5,9 +5,7 @@ import React from 'react'
 
 const DashboardPage = () => {
   const {user} = useUser()
-  if(!user){
-    return redirect("/sign-up")
-  }
+  
   return (
     <div>
       DashboardPage {user?.firstName}
