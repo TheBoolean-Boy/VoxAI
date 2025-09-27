@@ -5,11 +5,14 @@ import { ExternalLink, Github } from 'lucide-react'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import React from 'react'
+import CommitLog from './commit-log'
+import AskQuestionCard from './ask-question-card'
 
 const DashboardPage = () => {
   const { project } = useProject()
   return (
     <div>
+      {project?.id}
       <div className="flex items-center justify-between flex-wrap gap-y-4">
         {/* So basically the github link icon */}
         <div className="w-fit rounded-md bg-primary px-4 py-3">
@@ -40,15 +43,15 @@ const DashboardPage = () => {
 
       <div className=' mt-4'>
         <div className='grid grid-cols-1 gap-4 sm:grid-cols-5'>
-          AskQuestionCard
+          <AskQuestionCard />
           MeetingCard
         </div>
       </div>
 
       <div className='mt-8'>
-        CommitLog Component
+        <CommitLog />
       </div>
-      
+
     </div>
   )
 }
