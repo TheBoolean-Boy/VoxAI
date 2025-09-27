@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Textarea } from '@/components/ui/textarea'
 import useProject from '@/hooks/use-project'
 import Image from 'next/image'
-import React, { useState } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { askQuestion } from './action'
 import { readStreamableValue } from '@ai-sdk/rsc'
 import CodeReferences from './code-references'
@@ -22,27 +22,34 @@ const AskQuestionCard = () => {
   const [loading, setLoading] = React.useState(false)
   const [fileReferences, setFileReferences] = React.useState<{ fileName: string, sourceCode: string, summary: string }[]>([])
   const [answer, setAnswer] = React.useState('')
-  // const saveAnswer = api.project.saveAnswer.useMutation()
+  const saveAnswer = api.project.saveAnswer.useMutation()
+  const answerContainerRef = useRef<HTMLDivElement>(null)
 
   const refetch = useRefetch()
 
-  // const onSaveAnswer = async () => {
-  //   saveAnswer.mutate({
-  //     projectId: project!.id,
-  //     question,
-  //     answer,
-  //     fileReferences
-  //   }, 
-  //   {
-  //     onSuccess: () => {
-  //       toast.success("Answer saved successfully")
-  //       refetch()
-  //     },
-  //     onError: () => {
-  //       toast.error("Couldn't save the answer")
-  //     }
-  //   })
-  // }
+  useEffect(() => {
+    if (answerContainerRef.current && answer) {
+      answerContainerRef.current.scrollTop = answerContainerRef.current.scrollHeight
+    }
+  }, [answer])
+
+  const onSaveAnswer = async () => {
+    saveAnswer.mutate({
+      projectId: project!.id,
+      question,
+      answer,
+      fileReferences
+    }, 
+    {
+      onSuccess: () => {
+        toast.success("Answer saved successfully")
+        refetch()
+      },
+      onError: () => {
+        toast.error("Couldn't save the answer")
+      }
+    })
+  }
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     setAnswer('')
@@ -66,7 +73,7 @@ const AskQuestionCard = () => {
   return (
     <>
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className='sm:max-w-[95vw] max-h-[90vh] flex flex-col'>
+        <DialogContent className='sm:max-w-[98vw] max-h-[95vh] flex flex-col'>
           <DialogHeader>
             <div className='flex items-center gap-2 justify-between'>
               <DialogTitle className='flex items-center gap-2'>
@@ -74,9 +81,9 @@ const AskQuestionCard = () => {
                 <span>Vox AI</span>
               </DialogTitle>
               <div className='flex gap-2'>
-                {/* <Button disabled={saveAnswer.isPending} variant={'outline'} onClick={onSaveAnswer}>
+                <Button disabled={saveAnswer.isPending} variant={'outline'} onClick={onSaveAnswer}>
                   Save Answer
-                </Button> */}
+                </Button>
                 <Button type='button' variant={'outline'} onClick={() => setOpen(false)}>
                   Close
                 </Button>
@@ -84,22 +91,27 @@ const AskQuestionCard = () => {
             </div>
           </DialogHeader>
           
-          <div className='flex gap-4 flex-1 min-h-0'>
+          <div className='flex gap-6 flex-1 min-h-0'>
             <div className='flex-1 flex flex-col min-w-0'>
-              <h3 className='text-lg font-semibold mb-2 text-gray-700'>Answer to your query</h3>
+              <h3 className='text-lg font-semibold mb-3 text-gray-700'>Answer to your query</h3>
               <div className='flex-1 border rounded-lg overflow-hidden'>
-                <MDEditor.Markdown 
-                  source={answer || 'Waiting for response...'} 
-                  className='px-4 py-3 h-full overflow-auto rounded-lg' 
-                  data-color-mode="light" 
-                />
+                <div 
+                  ref={answerContainerRef}
+                  className='h-full overflow-auto'
+                >
+                  <MDEditor.Markdown 
+                    source={answer || 'Waiting for response...'} 
+                    className='px-6 py-4 min-h-full rounded-lg' 
+                    data-color-mode="light" 
+                  />
+                </div>
               </div>
             </div>
 
             {fileReferences.length > 0 && (
               <div className='flex-1 flex flex-col min-w-0'>
-                <h3 className='text-lg font-semibold mb-2 text-gray-700'>Files referred from Codebase</h3>
-                <div className='flex-1 min-h-0'>
+                <h3 className='text-lg font-semibold mb-3 text-gray-700'>Files referred from Codebase</h3>
+                <div className='flex-1 min-h-0 border rounded-lg overflow-hidden'>
                   <CodeReferences filesReferences={fileReferences} />
                 </div>
               </div>
